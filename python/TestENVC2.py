@@ -131,70 +131,136 @@ class Tk_changeENV(object):
         
         self.root = Tk()
         self.root.title("ChangeENV_V20170111")
-        #self.root.geometry("700x350")
+        self.root.geometry()
         self.root.resizable(width=False, height=False)#设置窗体不可改变
         #self.mainloop=self.root.mainloop()
+        self.path=r'C:\Windows\System32\drivers\etc\hosts' #host文件存放路径
 
-        #Button(self.root,text=u"切换",height=5,width=38,font=("Arial",10)).pack(side=RIGHT)
-        frm1=Frame(self.root)
-        Label(frm1,text=u"当前环境：",height=3,font=("Arial",10)).pack(fill=X,expand=1)
         
-
-        self.tx=Text(frm1,fg="red",font=("Arial",10))
+        frm=Frame(self.root)
+        Label(frm,text=self.path,height=1,font=("Arial",10)).pack(fill=X,expand=1)
         
-        scrl =Scrollbar(frm1)
+        #显示当前host文件的信息
+        self.tx=Text(frm,fg="blue",font=("Arial",10))
+        
+        scrl =Scrollbar(frm)
         scrl.pack(side=RIGHT,fill=Y)
         self.tx.configure(yscrollcommand = scrl.set)
         self.tx.pack(side=LEFT,fill=BOTH,expand=1)
         scrl["command"]=self.tx.yview
-        frm1.pack(side=LEFT)
-        
-        
 
         
-        frm2=Frame(self.root)
-        Label(frm2,text=u"切换至：",height=3,font=("Arial",10)).pack(fill=X,expand=1)
+    
         
-        self.tx=Text(frm2,fg="red",font=("Arial",10))
-        scr2 =Scrollbar(frm2)
-        scr2.pack(side=RIGHT,fill=Y)
-        self.tx.configure(yscrollcommand = scr2.set)
-        self.tx.pack(side=LEFT,fill=BOTH,expand=1)
-        scr2["command"]=self.tx.yview
-        frm2.pack(side=RIGHT)
+        frm.pack()
+
+        #读host信息
+        self.hostRead()
+        frmb=Frame(self.root)
+        Button(frmb,text=u"格式化").pack(side=RIGHT,fill=X,expand=1)
+        Button(frmb,text="T").pack(side=RIGHT,fill=X,expand=1)
+        Button(frmb,text="T20",command=self.switch_env).pack(side=RIGHT,fill=X,expand=1)
+        Button(frmb,text="T21",command=self.switch_env).pack(side=RIGHT,fill=X,expand=1)
+        Button(frmb,text="T22",command=self.switch_env).pack(side=RIGHT,fill=X,expand=1)
+        Button(frmb,text="T30",command=self.switch_env).pack(side=RIGHT,fill=X,expand=1)
+        Button(frmb,text="T31",command=self.switch_env).pack(side=RIGHT,fill=X,expand=1)
+        Button(frmb,text="T32",command=self.switch_env).pack(side=RIGHT,fill=X,expand=1)
+       
+        frmb.pack(fill=X,expand=1)
         
+        Button(self.root,text=u"切换>>>",command=self.hostWrite,height=3,bg="blue",font=("Arial",10)).pack(fill=X,expand=1)
+        
+        
+        '''
+        
+        #切换并显示要切换环境的信息
+        frm0=Frame(self.root)
+        Label(frm0,height=2,font=("Arial",10)).pack(fill=X,expand=1)
+        frm1=Frame(frm0)
+        Entry(frm1,font=("Arial",10)).pack(fill=Y,expand=1)
+        Button(frm1,text=u"切换>>>",command=self.hostWrite,height=3,font=("Arial",10)).pack(fill=X,expand=1)
+        frm1.pack(side=LEFT,fill=Y,expand=1)
+       
+        self.tx0=Text(frm0,fg="red",font=("Arial",10))
+        scr0 =Scrollbar(frm0)
+        scr0.pack(side=RIGHT,fill=Y)
+        self.tx0.configure(yscrollcommand = scr0.set)
+        self.tx0.pack(side=LEFT,fill=BOTH,expand=1)
+        scr0["command"]=self.tx0.yview
+        frm0.pack(side=RIGHT)'''
+
+
+    def switch_env(self,env="T20"):
+        #显示选择的要切换的环境
+
+        #清空文本框显示内容
+        self.tx.delete(1.0,END)
+        
+        #写入信息
+        self.tx.insert(END,"Switch to the Environment:")
+        self.tx.insert(END,ht[env])
+        
+         
 
     def hostWrite(self):
-        '''用于切换测试环境，需提供要切换的环境名称，名称格式如：T11'''
+        '''写入host'''
     
-        print 'Switch the environment...'
+        #读取Text中的host信息
+        host_text=self.tx.get(1.0,END)
+        list_text=host_text.splitlines()
+        if list_text[0]=="Current Test Environment:":
+            self.tip(u"请选择要切换的环境！")
 
-        h_file=open(r'C:\Windows\System32\drivers\etc\hosts','w') #打开host文件
-        h_file.write(base_text)
-        if testENV=='':
-            print 'Initializing...'
-            print 'Complete!!!'
-            return True
+        with open(self.path,'w') as h_file: #打开host文件
+            h_file.write(base_text)
+            h_file.write(host_text)
+
+        self.tx.delete(1.0,END)#清空右侧Text显示的显示
+        self.tx.insert(END,"切换完成!!!")
+        self.tx.insert(END,"...")
+
+        self.tx.delete(1.0,END)#清空左侧Text显示的显示
+        self.hostRead()#重新读取host文件信息
+
         
-        else:
-            try:
-                h_file.write(ht[testENV])#写入测试环境ip和域名
-                print 'Switch To:',testENV
-                #h_file.write()
-                h_file.close()#关闭host文件
-            
-                print 'Complete!!!'
-                print ht[testENV]
-                return True
-
-            except:
-                print "The Environment does not exist, please confirm!!!"
-                print " \n"
-                print "Input again please!"
-                return False
-
+        
+               
     def hostRead(self):
-        pass
+        '''读取host文件中的信息'''
+        try:
+            with open(self.path,'r') as h_file:
+                host_info=h_file.readlines()
+
+        except:
+            error_info=u"host文件不存在，请确认host文件所在路径"
+
+        self.tx.insert(END,u"Current Test Environment:")
+        for i in host_info:
+            if '#' in i:
+                continue
+            else:
+                self.tx.insert(END,i)
+
+
+    def tip(self,msg):
+        tk=Tk()
+        tk.title(u"提示信息")
+        tk.geometry("200x130")
+        tk.resizable(width=False, height=False)#设置窗体不可改变
+        Label(tk,text=msg).pack(fill=X,expand=1)
+
+        Button(tk,text=u"确定",command=tk.destroy).pack()#点击确定关闭提示窗口
+
+        Label(tk).pack()
+        
+        tk.mainloop()
+
+
+
+
+
+
+        
 def main():
     tk=Tk_changeENV()
     mainloop()
