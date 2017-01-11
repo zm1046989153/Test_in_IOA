@@ -35,7 +35,7 @@ class Xls2xml(object):
         testcase=[]#用于存放转化好的测试用例
         while i < row-1:
 
-            data1=data2=data3={}
+            data1=data2={}
             tem_data1=tem_data2=tem_data3=""
 
             i+=1
@@ -50,13 +50,13 @@ class Xls2xml(object):
             data1["keyword"]=self.keyword(i)
 
             #读取测试名称
-            data1["testname"]==self.testName(i)
+            data1["testname"]=self.testName(i)
 
             #读取路径
             data1["path"]=self.path(i)
 
             #读取用例性质
-            data1["propertys"]=self.propertys(i)
+            data1["property"]=self.propertys(i)
 
             #读取重要性
             data1["importance"]=self.importance(i)
@@ -67,41 +67,42 @@ class Xls2xml(object):
             #读取前置条件
             data1["preconditions"]=self.preconditions(i)
 
-            tem_data1=tem_head(data1)
+            tem_data1=self.tem_head(data1)
 
 
             #读取编写人
-            data3["writer"]=self.writer(i)
+            data1["writer"]=self.writer(i)
 
             #读取测试方式
-            data3["testtype"]=self.testType(i)
+            data1["testtype"]=self.testType(i)
 
             #读取状态
-            data3["teststatus"]=self.testStatus(i)
+            data1["teststatus"]=self.testStatus(i)
 
-            tem_data2=tem_other(data2)
+            tem_data3=self.tem_other(data1)
 
             while True:
                 #读取Excel中的步骤名称/测试步骤/期望结果/测试方式
                 #读取 步骤名称
-                data3["step_numbers"]=self.stepNum()
+                data2["step_number"]=self.stepNum(i)
 
                 #读取测试步骤
-                data3["actions"]=self.testSteps(i)
+                data2["actions"]=self.testSteps(i)
 
                 #读取期望结果
-                data3["expectedresults"]=self.exceptResults(i)
+                data2["expectedresults"]=self.exceptResults(i)
 
                 #读取测试方式
-                data3["execution_type"]=self.testType(i)
+                data2["execution_type"]=self.testType(i)
 
-                tem_data3+=tem_steps(data3)
+                tem_data2+=self.tem_step(data2)
 
                 #判断是否有用例ID，有ID则读取测试用例信息，不存在表示当前行为上一行的一个步骤
                 i+=1
                 if self.table.cell_value(i,0)=="" and i < row :
                     continue
                 else:
+                    i-=1
                     break
             #整合测试用用例
             tem_data=tem_data1+tem_data2+tem_data3
@@ -249,7 +250,7 @@ class Xls2xml(object):
 
         return step.encode("utf-8")
 
-    def exceptesults(self,i):
+    def exceptResults(self,i):
         ''' 期望结果'''
         global error_info
         case_id=self.table.cell_value(i,0)#用例ID
@@ -293,7 +294,7 @@ class Xls2xml(object):
     #####Xml用例的格式模板#############################################################################################
     ###################################################################################################################
     def tem_head(self,data):
-        template1="""
+        template="""
      <testcase name="%(testname)s">\r
        <keywords>\r
             <keyword name="%(keyword)s" />\r
@@ -317,7 +318,7 @@ class Xls2xml(object):
        """
         return template % data
 
-    def tem_other(self):
+    def tem_other(self,data):
         template="""
         <status><![CDATA[1]]></status>\r
        <execution_type><![CDATA[1]]></execution_type>\r
@@ -336,7 +337,7 @@ class Xls2xml(object):
 
         return template % data
 
-path=u"C:\Users\jormo\Desktop\CP.xls"
+path=u"C:\\Users\\Administrator\\Desktop\\android平台_邮箱注册_v0.9.1.xls"
 xls=Xls2xml(path)
 xls.readxls()
 
