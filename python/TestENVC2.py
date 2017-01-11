@@ -131,13 +131,13 @@ class Tk_changeENV(object):
         
         self.root = Tk()
         self.root.title("ChangeENV_V20170111")
-        self.root.geometry("700x350")
+        #self.root.geometry("700x350")
         self.root.resizable(width=False, height=False)#设置窗体不可改变
         #self.mainloop=self.root.mainloop()
 
         #Button(self.root,text=u"切换",height=5,width=38,font=("Arial",10)).pack(side=RIGHT)
         frm1=Frame(self.root)
-        Label(frm1,text=u"当前环境：",bg="blue",font=("Arial",10)).pack(fill=X,expand=1)
+        Label(frm1,text=u"当前环境：",height=3,font=("Arial",10)).pack(fill=X,expand=1)
         
 
         self.tx=Text(frm1,fg="red",font=("Arial",10))
@@ -147,13 +147,13 @@ class Tk_changeENV(object):
         self.tx.configure(yscrollcommand = scrl.set)
         self.tx.pack(side=LEFT,fill=BOTH,expand=1)
         scrl["command"]=self.tx.yview
-        frm1.pack(side=LEFT,fill=BOTH,expand=1)
-        frm1=Frame(self.root)
+        frm1.pack(side=LEFT)
+        
         
 
         
         frm2=Frame(self.root)
-        Label(frm2,text=u"切换至：",bg="blue",font=("Arial",10)).pack(fill=X,expand=1)
+        Label(frm2,text=u"切换至：",height=3,font=("Arial",10)).pack(fill=X,expand=1)
         
         self.tx=Text(frm2,fg="red",font=("Arial",10))
         scr2 =Scrollbar(frm2)
@@ -161,7 +161,7 @@ class Tk_changeENV(object):
         self.tx.configure(yscrollcommand = scr2.set)
         self.tx.pack(side=LEFT,fill=BOTH,expand=1)
         scr2["command"]=self.tx.yview
-        frm2.pack(side=RIGHT,fill=BOTH,expand=1)
+        frm2.pack(side=RIGHT)
         
 
     def hostWrite(self):
