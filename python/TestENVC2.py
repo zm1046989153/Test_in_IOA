@@ -134,8 +134,8 @@ class Tk_changeENV(object):
         self.root.geometry()
         self.root.resizable(width=False, height=False)#设置窗体不可改变
         #self.mainloop=self.root.mainloop()
-        self.path=r'C:\Windows\System32\drivers\etc\hosts' #host文件存放路径
-
+        #self.path=r'C:\Windows\System32\drivers\etc\hosts' #host文件存放路径
+        self.path=r"D:\hosts"
         
         frm=Frame(self.root)
         Label(frm,text=self.path,height=1,font=("Arial",10)).pack(fill=X,expand=1)
@@ -148,28 +148,27 @@ class Tk_changeENV(object):
         self.tx.configure(yscrollcommand = scrl.set)
         self.tx.pack(side=LEFT,fill=BOTH,expand=1)
         scrl["command"]=self.tx.yview
-
-        
-    
         
         frm.pack()
 
-        #读host信息
-        self.hostRead()
+        #读要切换的环境的host信息
+        
         frmb=Frame(self.root)
-        Button(frmb,text=u"格式化").pack(side=RIGHT,fill=X,expand=1)
-        Button(frmb,text="T").pack(side=RIGHT,fill=X,expand=1)
-        Button(frmb,text="T20",command=self.switch_env).pack(side=RIGHT,fill=X,expand=1)
-        Button(frmb,text="T21",command=self.switch_env).pack(side=RIGHT,fill=X,expand=1)
-        Button(frmb,text="T22",command=self.switch_env).pack(side=RIGHT,fill=X,expand=1)
-        Button(frmb,text="T30",command=self.switch_env).pack(side=RIGHT,fill=X,expand=1)
-        Button(frmb,text="T31",command=self.switch_env).pack(side=RIGHT,fill=X,expand=1)
-        Button(frmb,text="T32",command=self.switch_env).pack(side=RIGHT,fill=X,expand=1)
+        Button(frmb,text=u"格式化",command=lambda:self.switch_env(env="T"),bg="red").pack(side=RIGHT,fill=X,expand=1)
+        Button(frmb,text="Current",command=self.hostRead,bg="green").pack(side=RIGHT,fill=X,expand=1)
+        Button(frmb,text="T20",command=lambda:self.switch_env(env="T20")).pack(side=RIGHT,fill=X,expand=1)
+        Button(frmb,text="T21",command=lambda:self.switch_env(env="T21")).pack(side=RIGHT,fill=X,expand=1)
+        Button(frmb,text="T22",command=lambda:self.switch_env(env="T22")).pack(side=RIGHT,fill=X,expand=1)
+        Button(frmb,text="T30",command=lambda:self.switch_env(env="T30")).pack(side=RIGHT,fill=X,expand=1)
+        Button(frmb,text="T31",command=lambda:self.switch_env(env="T31")).pack(side=RIGHT,fill=X,expand=1)
+        Button(frmb,text="T32",command=lambda:self.switch_env(env="T32")).pack(side=RIGHT,fill=X,expand=1)
        
         frmb.pack(fill=X,expand=1)
         
-        Button(self.root,text=u"切换>>>",command=self.hostWrite,height=3,bg="blue",font=("Arial",10)).pack(fill=X,expand=1)
-        
+        Button(self.root,text=u">>>切换>>>",command=self.hostWrite,height=3,bg="blue",font=("Arial",10)).pack(fill=X,expand=1)
+
+        #读取当前host信息并显示
+        self.hostRead()
         
         '''
         
@@ -190,15 +189,26 @@ class Tk_changeENV(object):
         frm0.pack(side=RIGHT)'''
 
 
-    def switch_env(self,env="T20"):
+    def switch_env(self,env):
         #显示选择的要切换的环境
 
         #清空文本框显示内容
         self.tx.delete(1.0,END)
         
         #写入信息
-        self.tx.insert(END,"Switch to the Environment:")
-        self.tx.insert(END,ht[env])
+        self.tx.insert(END,">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n")
+        self.tx.insert(END,">>>>>>>>>>>>>>>>>>>>>>>>>>Switch to the Environment>>>>>>>>>>>>>\n")
+        self.tx.insert(END,">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n")
+        if env=="T":
+            self.tx.insert(END,"\n")
+            self.tx.insert(END,">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n")
+            self.tx.insert(END,u">>>>>>>>>>>>>>>初始化host文件，切换至现网环境>>>>>>>>>>>>>\n")
+            self.tx.insert(END,">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n")
+        else:
+            try:
+                self.tx.insert(END,ht[env])
+            except KeyError:
+                self.tip(u"切换的环境不存在")
         
          
 
@@ -207,39 +217,50 @@ class Tk_changeENV(object):
     
         #读取Text中的host信息
         host_text=self.tx.get(1.0,END)
-        list_text=host_text.splitlines()
-        if list_text[0]=="Current Test Environment:":
+        
+        if "Current Test Environment" in host_text:
             self.tip(u"请选择要切换的环境！")
-
-        with open(self.path,'w') as h_file: #打开host文件
-            h_file.write(base_text)
-            h_file.write(host_text)
-
-        self.tx.delete(1.0,END)#清空右侧Text显示的显示
-        self.tx.insert(END,"切换完成!!!")
-        self.tx.insert(END,"...")
-
-        self.tx.delete(1.0,END)#清空左侧Text显示的显示
-        self.hostRead()#重新读取host文件信息
-
+        list_text=host_text.splitlines()
+        
+        try:
+            with open(self.path,'w') as h_file: #打开host文件
+                h_file.write(base_text)
+                for t in list_text:
+                    if ">>" in t:
+                        continue
+                    else:
+                        h_file.write("\n")
+                        h_file.write(t)
+            self.tip(u"切换完成!!!")
+            
+        except UnicodeEncodeError:
+            self.tip(u"请勿使用中文字符!!!")
+      
+        #self.hostRead()#重新读取host文件信息
         
         
                
     def hostRead(self):
+        
         '''读取host文件中的信息'''
+        self.tx.delete(1.0,END)#清空text中显示的内容
+        
         try:
             with open(self.path,'r') as h_file:
                 host_info=h_file.readlines()
-
         except:
             error_info=u"host文件不存在，请确认host文件所在路径"
 
-        self.tx.insert(END,u"Current Test Environment:")
+        self.tx.insert(END,"####################################################################\n")
+        self.tx.insert(END,"##########################Current Test Environment#####################\n")
+        self.tx.insert(END,"####################################################################\n")
         for i in host_info:
             if '#' in i:
                 continue
             else:
                 self.tx.insert(END,i)
+                self.tx.insert(END,"\n")
+        
 
 
     def tip(self,msg):
@@ -254,7 +275,6 @@ class Tk_changeENV(object):
         Label(tk).pack()
         
         tk.mainloop()
-
 
 
 
