@@ -130,12 +130,12 @@ class Tk_changeENV(object):
         self.filename="" #存放选择文件的路径
         
         self.root = Tk()
-        self.root.title("ChangeENV_V20170111")
+        self.root.title("ChangeENV_V20170112")
         self.root.geometry()
         self.root.resizable(width=False, height=False)#设置窗体不可改变
         #self.mainloop=self.root.mainloop()
-        #self.path=r'C:\Windows\System32\drivers\etc\hosts' #host文件存放路径
-        self.path=r"D:\hosts"
+        self.path=r'C:\Windows\System32\drivers\etc\hosts' #host文件存放路径
+        #self.path=r"D:\hosts"
         
         frm=Frame(self.root)
         Label(frm,text=self.path,height=1,font=("Arial",10)).pack(fill=X,expand=1)
@@ -146,10 +146,25 @@ class Tk_changeENV(object):
         scrl =Scrollbar(frm)
         scrl.pack(side=RIGHT,fill=Y)
         self.tx.configure(yscrollcommand = scrl.set)
-        self.tx.pack(side=LEFT,fill=BOTH,expand=1)
+        self.tx.pack(fill=BOTH,expand=1)
         scrl["command"]=self.tx.yview
         
+        #Text输出提示信息
+        '''
+        self.tx0=Text(frm,fg="red",font=("Arial",12),width=3,height=1)
+        self.tx0.pack(fill=X,expand=1)'''
+
+        #Label输出提示信息
+        self.var = StringVar()
+        label =Label(frm,textvariable=self.var,fg="red",font=("Arial",12),width=3,height=1)
+        label.pack(fill=X,expand=1)
+        
+        
         frm.pack()
+        #读取当前host信息并显示
+        self.hostRead()
+        #提示信息窗口
+        
 
         #读要切换的环境的host信息
         
@@ -167,8 +182,7 @@ class Tk_changeENV(object):
         
         Button(self.root,text=u">>>切换>>>",command=self.hostWrite,height=3,bg="blue",font=("Arial",10)).pack(fill=X,expand=1)
 
-        #读取当前host信息并显示
-        self.hostRead()
+        
         
         '''
         
@@ -196,19 +210,20 @@ class Tk_changeENV(object):
         self.tx.delete(1.0,END)
         
         #写入信息
-        self.tx.insert(END,">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n")
-        self.tx.insert(END,">>>>>>>>>>>>>>>>>>>>>>>>>>Switch to the Environment>>>>>>>>>>>>>\n")
-        self.tx.insert(END,">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n")
+        self.tx.insert(END,">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n")
+        self.tx.insert(END,">>>>>>>>>>>>>>>>>>>>>>>>>>Switch to the Environment>>>>>>>>>>>>>>>>>>>>>>>>>>>\n")
+        self.tx.insert(END,">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n")
         if env=="T":
             self.tx.insert(END,"\n")
-            self.tx.insert(END,">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n")
-            self.tx.insert(END,u">>>>>>>>>>>>>>>初始化host文件，切换至现网环境>>>>>>>>>>>>>\n")
+            self.tx.insert(END,">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n")
+            self.tx.insert(END,u">>>>>>>>>>>>>>>>>>>初始化host文件，切换至现网环境>>>>>>>>>>>>>\n")
             self.tx.insert(END,">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n")
         else:
             try:
                 self.tx.insert(END,ht[env])
             except KeyError:
-                self.tip(u"切换的环境不存在")
+                self.tip(u"切换的环境不存在!")
+                
         
          
 
@@ -219,22 +234,23 @@ class Tk_changeENV(object):
         host_text=self.tx.get(1.0,END)
         
         if "Current Test Environment" in host_text:
-            self.tip(u"请选择要切换的环境！")
-        list_text=host_text.splitlines()
+            self.tip(u"请选择要切换的环境!")
+        else:
+            list_text=host_text.splitlines()
         
-        try:
-            with open(self.path,'w') as h_file: #打开host文件
-                h_file.write(base_text)
-                for t in list_text:
-                    if ">>" in t:
-                        continue
-                    else:
-                        h_file.write("\n")
-                        h_file.write(t)
-            self.tip(u"切换完成!!!")
+            try:
+                with open(self.path,'w') as h_file: #打开host文件
+                    h_file.write(base_text)
+                    for t in list_text:
+                        if ">>" in t:
+                            continue
+                        else:
+                            h_file.write("\n")
+                            h_file.write(t)
+                self.tip(u"切换完成!!!")
             
-        except UnicodeEncodeError:
-            self.tip(u"请勿使用中文字符!!!")
+            except UnicodeEncodeError:
+                self.tip(u"请勿使用中文字符!!!")
       
         #self.hostRead()#重新读取host文件信息
         
@@ -248,22 +264,34 @@ class Tk_changeENV(object):
         try:
             with open(self.path,'r') as h_file:
                 host_info=h_file.readlines()
-        except:
-            error_info=u"host文件不存在，请确认host文件所在路径"
-
-        self.tx.insert(END,"####################################################################\n")
-        self.tx.insert(END,"##########################Current Test Environment#####################\n")
-        self.tx.insert(END,"####################################################################\n")
-        for i in host_info:
-            if '#' in i:
-                continue
-            else:
-                self.tx.insert(END,i)
-                self.tx.insert(END,"\n")
         
+            self.tx.insert(END,"***************************************************************************************************\n")
+            self.tx.insert(END,"*********************************Current Test Environment****************************************\n")
+            self.tx.insert(END,"***************************************************************************************************\n")
+            for i in host_info:
+                if '#' in i:
+                    continue
+                else:
+                    self.tx.insert(END,i)
+                    self.tx.insert(END,"\n")
+        except:
+            
+            error_info=u"host文件不存在，请确认host文件所在路径"
 
 
     def tip(self,msg):
+        
+        #使用Label输入提示信息
+        self.var.set(msg)
+        '''
+        
+        self.tx0.delete(1.0,END)
+        #文本框中提示
+        self.tx0.insert(END,u"提示:")
+        self.tx0.insert(END,msg)'''
+        
+        #使用提示框提示
+        '''
         tk=Tk()
         tk.title(u"提示信息")
         tk.geometry("200x130")
@@ -274,7 +302,7 @@ class Tk_changeENV(object):
 
         Label(tk).pack()
         
-        tk.mainloop()
+        tk.mainloop()'''
 
 
 
