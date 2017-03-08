@@ -3,6 +3,7 @@
 __author__ = 'Jormon'
 
 import xlrd
+import os
 class Xls2xml(object):
     def __init__(self,path):
         try:
@@ -15,6 +16,7 @@ class Xls2xml(object):
 
         self.cols=self.table.ncols #读取列数
         self.rows=self.table.nrows #读取行数
+        print self.cols ,self.rows
 
     def readxls(self):
         """读取excel中用例"""
@@ -32,6 +34,7 @@ class Xls2xml(object):
         col=self.cols
         row=self.rows
         i=0
+        
         testcase=[]#用于存放转化好的测试用例
         while i < row-1:
 
@@ -81,6 +84,9 @@ class Xls2xml(object):
 
             tem_data3=self.tem_other(data1)
 
+            #使用tem_data2存放测试步骤
+            tem_data2="<steps>\r"
+
             while True:
                 #读取Excel中的步骤名称/测试步骤/期望结果/测试方式
                 #读取 步骤名称
@@ -99,16 +105,31 @@ class Xls2xml(object):
 
                 #判断是否有用例ID，有ID则读取测试用例信息，不存在表示当前行为上一行的一个步骤
                 i+=1
-                if self.table.cell_value(i,0)=="" and i < row :
-                    continue
-                else:
-                    i-=1
-                    break
+                if i < row:
+                    if self.table.cell_value(i,0)=="":
+                        continue
+                    else:
+                        i-=1
+                        break
+                else:break
+            tem_data2+="</steps>\r"
             #整合测试用用例
             tem_data=tem_data1+tem_data2+tem_data3
             #将测试用例存放到testcase=[{caseid:tem_data},{caseid:tem_data},{caseid:tem_data}]
-            testcase.append(dict([caseid,tem_data]))
-
+            #print type(caseid),type(tem_data),type(str(caseid))
+            #print str(caseid),caseid,tem_data
+            case={}
+            case[cid]=tem_data
+            testcase.append(case)
+            #print cid,case[cid]
+        #for i in testcase:
+            #print i
+        '''
+        for i in testcase:
+            for j in i:
+                if j ==u"1":
+                    print i[u"1"]'''
+        #print testcase
         return testcase
 
 
@@ -307,14 +328,13 @@ class Xls2xml(object):
 
     def tem_step(self,data):
         template="""
-        <steps>\r
          <step>\r
                   <step_number><![CDATA[%(step_number)s]]></step_number>\r
                   <actions><![CDATA[%(actions)s]]></actions>\r
                   <expectedresults><![CDATA[%(expectedresults)s]]></expectedresults>\r
                  <execution_type><![CDATA[1]]></execution_type>\r
          </step>\r
-       </steps>\r
+       
        """
         return template % data
 
@@ -337,9 +357,91 @@ class Xls2xml(object):
 
         return template % data
 
-path=u"C:\\Users\\Administrator\\Desktop\\android平台_邮箱注册_v0.9.1.xls"
+
+    def xml_write(case_info,path):
+        u'''将转化后的用例写进xml文件中case_info=[{id:testcase},{},{}]'''
+        if error_info==[]:
+            pass
+        else:
+            #error_output()
+            return False,path,None #有错误信息则返回打印错误信息
+        xml_path=self.xlsToxmlPath(path)
+        file=open(xml_path,'wb')
+        file.write('<?xml version="1.0" encoding="utf-8"?>')
+        testsuit='''
+        <testsuite name="%s">
+        <node_order />
+        <details />'''
+
+        file.write(testsuit%'')
+        casepath=[]#存放用例的路径
+        casenum=len(case_info)
+        for n in range(casenum):
+            n+=1
+            casepath.append(self.path(n))
+            
+
+        if case_info[n]['path'] in casepath:
+            continue
+        else:
+            casepath.append(case_info[n]['path'])
+            #casepath=list(set(casepath))#去除重复的路径
+
+        dict_path={}
+        
+        for k in casepath:
+            dict_path[k]=[]
+
+        for n in range(casenum):
+            ph=case_info[n]['path']
+        for k in casepath:
+            if k==ph:
+                dict_path[k].append(case_info[n])
+                #print True
+                break
+            else:
+                #print False
+                continue
+            
+        k=0
+        #开始将测试用例写入xml文件
+        for j in casepath:
+            #dict_path={key:[{test1},{test2}],key:[{test1},{test2}]}
+            #casepath=[path1,path2,...]
+            jts=j.split('/')
+            #print jts
+            for jt in jts:
+            jt0=jt.encode("utf-8")
+            #print testsuit%jt
+            file.write(testsuit%jt0)#根据路径写入testsuit
+            
+        #print dict_path[j]
+        tems=map(case_template,dict_path[j]) #将从excel获取的用例信息转为xml格式
+        for tem in tems:#写入测试用例
+            file.write(tem)
+            k+=1#记录测试用例写入条数
+            
+        for jt in jts:
+            file.write("\r\n</testsuite>\r\n")
+
+
+        file.write(r"</testsuite>")
+        print 'Total:'+str(k)
+        file.close()
+        return True,xml_path,k#返回True表示转化成功
+
+    def xlsToxmlPath(self,path):
+        tt=time.strftime("%Y%m%d%H%M%S",time.localtime())
+        path0=path.split('.')
+        path0.pop()
+        path1='.'.join(path0)
+    
+    return path1 + '_' + tt+'.xml'
+
+path=u"C:\\Users\\jormo\\Desktop\\CP.xls"
 xls=Xls2xml(path)
-xls.readxls()
+case_info=xls.readxls()
+xml_write(case_info,path)
 
 ######################################################################################################################
 #####图形界面 ########################################################################################################
