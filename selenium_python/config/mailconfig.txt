@@ -1,0 +1,17 @@
+#发送邮箱
+sender   =   zhenmingc@163.com
+
+
+#接收邮箱
+receiver =   zhenmingc@163.com
+
+
+#发送邮件的主题
+subject  =   python email test
+
+#发送邮件的服务器
+smtpserver = smtp.163.com
+
+#发送邮箱用户和密码
+username = zhenmingc@163.com
+password = zm991425107
